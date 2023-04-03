@@ -1,0 +1,17 @@
+{
+    "uuid": "just_shows_memory_usage@troizet.github.com",
+    "name": "Just shows memory usage",
+    "description": "Just shows memory usage",
+    "version": 1,
+    "shell-version": [
+    	"3.30",
+    	"3.32",
+    	"3.34",
+    	"3.36",
+    	"3.38",
+    	"40",
+    	"41",
+	"42"
+    ],
+    "url": "https://github.com/troizet/just-shows-memory-usage"
+}
