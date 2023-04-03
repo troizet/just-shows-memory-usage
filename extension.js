@@ -40,8 +40,11 @@ function enable() {
 }
 
 function disable() {
-      indicator.destroy();
       Mainloop.source_remove(timeout);
+      indicator.destroy();
+      indicator = null;
+      label = null;
+      timeout = null;
 }
 
 function read_proc_meminfo() {
