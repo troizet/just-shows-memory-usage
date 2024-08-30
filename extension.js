@@ -1,29 +1,27 @@
-const St = imports.gi.St;
-const Clutter = imports.gi.Clutter;
-const Gio = imports.gi.Gio;
-const GLib = imports.gi.GLib;
-const ByteArray = imports.byteArray;
-const ExtensionUtils = imports.misc.extensionUtils;
-const Me = ExtensionUtils.getCurrentExtension();
-const Main = imports.ui.main;
-const PanelMenu = imports.ui.panelMenu;
-const Mainloop = imports.mainloop;
+import St from 'gi://St';
+import Clutter from 'gi://Clutter';
+import Gio from 'gi://Gio';
+import GLib from 'gi://GLib';
+import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 
 var indicator, label, timeout;
 
-function _refresh() {
-  let info = read_proc_meminfo();
-  let total = (info.total/(1024*1024)).toFixed(2) + "G";
-  let used = (info.used/(1024*1024)).toFixed(2) + "G";
+export default class JustShowsMemoryExtension extends Extension {
+   _refresh() {
+      let info = this.read_proc_meminfo();
+      let total = (info.total/(1024*1024)).toFixed(0) + "G";
+      let used = (info.used/(1024*1024)).toFixed(0) + "G";
 
-  label.set_text(used + '/' + total);
-}
+      label.set_text(used + '/' + total);
+   }
 
-function enable() {
+   enable() {
       indicator = new PanelMenu.Button(0.0, "Just memory usage", false);
 
-      timeout = Mainloop.timeout_add(1000, function () {
-          _refresh();
+      timeout = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 1000, () => {
+          this._refresh();
           return true;
       });
       Main.panel.addToStatusArea("Just memory usage Indicator", indicator);
@@ -37,33 +35,34 @@ function enable() {
       });
 
       indicator.actor.add_child(label);
-}
+   }
 
-function disable() {
-      Mainloop.source_remove(timeout);
+   disable() {
+      GLib.source_remove(timeout);
       indicator.destroy();
       indicator = null;
       label = null;
       timeout = null;
-}
+   }
 
-function read_proc_meminfo() {
-  let result = GLib.file_get_contents("/proc/meminfo");
-  if(result[0]) {
-    let str = ByteArray.toString(result[1]);
-    let lines = str.split("\n");
-    let total = getMemInfo(lines[0]);
-    let avail = getMemInfo(lines[2]);
+   read_proc_meminfo() {
+      let result = GLib.file_get_contents("/proc/meminfo");
+      if (result[0]) {
+        let str = new TextDecoder().decode(result[1]);
+        let lines = str.split("\n");
+        let total = this.getMemInfo(lines[0]);
+        let avail = this.getMemInfo(lines[2]);
 
-    GLib.free(result[1]);
-    return {total: total, used: (total-avail)};
-  } else {
-    log(`${Me.metadata.name}: Error to read /proc/meminfo`);
-  }
-}
+        GLib.free(result[1]);
+        return {total: total, used: (total-avail)};
+      } else {
+        log(`${this.name}: Error to read /proc/meminfo`);
+      }
+    }
 
-function getMemInfo(str) {
-  let reg = /\d+/i;
-  let s = str.match(reg);
-  return parseInt(s[0]);
+   getMemInfo(str) {
+      let reg = /\d+/i;
+      let s = str.match(reg);
+      return parseInt(s[0]);
+    }
 }
