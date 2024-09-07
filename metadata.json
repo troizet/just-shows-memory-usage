@@ -2,6 +2,7 @@
   "description": "Just shows memory usage",
   "name": "Just shows memory usage",
   "shell-version": [
+    "45",
     "46"
   ],
   "url": "https://github.com/troizet/just-shows-memory-usage",
