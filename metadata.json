@@ -6,5 +6,6 @@
   ],
   "url": "https://github.com/troizet/just-shows-memory-usage",
   "uuid": "just_shows_memory_usage@troizet.github.com",
-  "version": 2
+  "settings-schema": "org.gnome.shell.extensions.just-shows-memory-usage",
+  "version": 3
 }

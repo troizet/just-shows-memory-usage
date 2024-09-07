@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="org.gnome.shell.extensions.just-shows-memory-usage" path="/org/gnome/shell/extensions/just-shows-memory-usage/">
+    <key name="timeout" type="u">
+      <default>1000</default>
+      <summary>Timeout</summary>
+      <description>Timeout setting.</description>
+    </key>
+    <key name="digits" type="u">
+      <default>2</default>
+      <summary>Digits</summary>
+      <description>Number of displayed decimal digits.</description>
+    </key>
+  </schema>
+</schemalist>
