@@ -59,6 +59,7 @@ export default class JustShowsMemoryExtension extends Extension {
         this._indicator = null;
         this._label = null;
         this._timeout = null;
+        this._settings = null;
     }
 
     read_proc_meminfo() {
