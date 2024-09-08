@@ -30,7 +30,7 @@ export default class JustShowsMemoryPreferences extends ExtensionPreferences {
 
         const timeoutSpin = new Adw.SpinRow({
             title: _('Timeout'),
-            subtitle: _('Timeout setting.')
+            subtitle: _('Timeout setting (in milliseconds).')
         });
 
         timeoutSpin.set_adjustment(
