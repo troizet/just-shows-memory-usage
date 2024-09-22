@@ -3,7 +3,8 @@
   "name": "Just shows memory usage",
   "shell-version": [
     "45",
-    "46"
+    "46",
+    "47"
   ],
   "url": "https://github.com/troizet/just-shows-memory-usage",
   "uuid": "just_shows_memory_usage@troizet.github.com",
