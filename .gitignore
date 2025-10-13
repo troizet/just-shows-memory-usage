@@ -1,0 +1,4 @@
+### GNOMEShellExtension GitIgnore
+# Ignored files for GNOME extension git repository
+
+*.zip

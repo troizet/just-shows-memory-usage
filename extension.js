@@ -1,6 +1,5 @@
 import St from 'gi://St';
 import Clutter from 'gi://Clutter';
-import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
@@ -50,7 +49,7 @@ export default class JustShowsMemoryExtension extends Extension {
             reactive: false
         });
 
-        this._indicator.actor.add_child(this._label);
+        this._indicator.add_child(this._label);
     }
 
     disable() {
