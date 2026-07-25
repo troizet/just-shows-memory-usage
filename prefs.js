@@ -13,6 +13,21 @@ export default class JustShowsMemoryPreferences extends ExtensionPreferences {
         const group = new Adw.PreferencesGroup();
         page.add(group);
 
+        const displayModeRow = new Adw.ComboRow({
+            title: _('Display Format'),
+            subtitle: _('Format used to show memory usage.'),
+            model: new Gtk.StringList({
+                strings: [
+                    _('Used / Total (e.g. 4.20G/15.50G)'),
+                    _('Used / Total (Percent) (e.g. 4.20G/15.50G (27%))'),
+                    _('Percent only (e.g. 27%)'),
+                    _('Used (Percent) (e.g. 4.20G (27%))')
+                ]
+            })
+        });
+
+        group.add(displayModeRow);
+
         const digitsSpin = new Adw.SpinRow({
             title: _('Digits'),
             subtitle: _('Number of displayed decimal digits.')
@@ -44,6 +59,9 @@ export default class JustShowsMemoryPreferences extends ExtensionPreferences {
         group.add(timeoutSpin);
 
         window._settings = this.getSettings();
+
+        window._settings.bind('display-mode', displayModeRow, 'selected',
+            Gio.SettingsBindFlags.DEFAULT);
 
         window._settings.bind('digits', digitsSpin, 'value',
             Gio.SettingsBindFlags.DEFAULT);

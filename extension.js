@@ -8,16 +8,40 @@ import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 export default class JustShowsMemoryExtension extends Extension {
     _refresh() {
         let info = this.read_proc_meminfo();
+        if (!info) return;
+
         let total = (info.total / (1024 * 1024)).toFixed(this._digits) + "G";
         let used = (info.used / (1024 * 1024)).toFixed(this._digits) + "G";
+        let percentVal = (info.used / info.total) * 100;
+        let percent = (this._digits === 0 ? percentVal.toFixed(0) : percentVal.toFixed(1)) + "%";
 
-        this._label.set_text(used + '/' + total);
+        let text = '';
+        switch (this._displayMode) {
+            case 0:
+                text = `${used}/${total}`;
+                break;
+            case 1:
+                text = `${used}/${total} (${percent})`;
+                break;
+            case 2:
+                text = `${percent}`;
+                break;
+            case 3:
+                text = `${used} (${percent})`;
+                break;
+            default:
+                text = `${used}/${total} (${percent})`;
+                break;
+        }
+
+        this._label.set_text(text);
     }
 
     enable() {
         this._indicator = new PanelMenu.Button(0.0, "Just memory usage", false);
         this._settings = this.getSettings();
         this._digits = this._settings.get_uint('digits');
+        this._displayMode = this._settings.get_uint('display-mode');
 
         this._timeout = GLib.timeout_add(GLib.PRIORITY_DEFAULT, this._settings.get_uint('timeout'), () => {
             this._refresh();
@@ -30,6 +54,12 @@ export default class JustShowsMemoryExtension extends Extension {
 
         this._settings.connect('changed::digits', (settings, key) => {
             this._digits = settings.get_uint(key);
+            this._refresh();
+        });
+
+        this._settings.connect('changed::display-mode', (settings, key) => {
+            this._displayMode = settings.get_uint(key);
+            this._refresh();
         });
 
         this._settings.connect('changed::timeout', (settings, key) => {
@@ -50,6 +80,7 @@ export default class JustShowsMemoryExtension extends Extension {
         });
 
         this._indicator.add_child(this._label);
+        this._refresh();
     }
 
     disable() {
