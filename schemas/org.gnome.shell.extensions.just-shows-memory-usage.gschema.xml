@@ -11,5 +11,10 @@
       <summary>Digits</summary>
       <description>Number of displayed decimal digits.</description>
     </key>
+    <key name="display-mode" type="u">
+      <default>1</default>
+      <summary>Display Format</summary>
+      <description>0: Used/Total, 1: Used/Total (%), 2: %, 3: Used (%)</description>
+    </key>
   </schema>
 </schemalist>
