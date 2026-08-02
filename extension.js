@@ -30,7 +30,7 @@ export default class JustShowsMemoryExtension extends Extension {
                 text = `${used} (${percent})`;
                 break;
             default:
-                text = `${used}/${total} (${percent})`;
+                text = `${used}/${total}`;
                 break;
         }
 
