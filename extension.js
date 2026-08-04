@@ -52,17 +52,17 @@ export default class JustShowsMemoryExtension extends Extension {
         this._indicator.menu.addAction(_('Preferences'),
                 () => this.openPreferences());
 
-        this._settings.connect('changed::digits', (settings, key) => {
+        this._digitsHandler = this._settings.connect('changed::digits', (settings, key) => {
             this._digits = settings.get_uint(key);
             this._refresh();
         });
 
-        this._settings.connect('changed::display-mode', (settings, key) => {
+        this._displayModeHandler = this._settings.connect('changed::display-mode', (settings, key) => {
             this._displayMode = settings.get_uint(key);
             this._refresh();
         });
 
-        this._settings.connect('changed::timeout', (settings, key) => {
+        this._timeoutHandler = this._settings.connect('changed::timeout', (settings, key) => {
             GLib.source_remove(this._timeout);
 
             this._timeout = GLib.timeout_add(GLib.PRIORITY_DEFAULT, settings.get_uint(key), () => {
@@ -90,6 +90,20 @@ export default class JustShowsMemoryExtension extends Extension {
         this._label.destroy();
         this._label = null;
         this._timeout = null;
+
+        if (this._digitsHandler) {
+            this._settings.disconnect(this._digitsHandler);
+            this._digitsHandler = null;
+        }
+        if (this._displayModeHandler) {
+            this._settings.disconnect(this._displayModeHandler);
+            this._displayModeHandler = null;
+        }
+        if (this._timeoutHandler) {
+            this._settings.disconnect(this._timeoutHandler);
+            this._timeoutHandler = null;
+        }
+
         this._settings = null;
     }
 
