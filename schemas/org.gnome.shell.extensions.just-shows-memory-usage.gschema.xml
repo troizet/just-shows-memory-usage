@@ -16,5 +16,10 @@
       <summary>Display Format</summary>
       <description>0: Used/Total, 1: Used/Total (%), 2: %, 3: Used (%)</description>
     </key>
+    <key name="click-command" type="s">
+      <default>''</default>
+      <summary>Click command</summary>
+      <description>Shell command run on left click. Empty: left click opens the menu.</description>
+    </key>
   </schema>
 </schemalist>

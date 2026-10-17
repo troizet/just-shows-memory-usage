@@ -58,7 +58,16 @@ export default class JustShowsMemoryPreferences extends ExtensionPreferences {
 
         group.add(timeoutSpin);
 
+        const commandRow = new Adw.EntryRow({
+            title: _('Left click command (e.g. ptyxis -- top). Empty: open menu')
+        });
+
+        group.add(commandRow);
+
         window._settings = this.getSettings();
+
+        window._settings.bind('click-command', commandRow, 'text',
+            Gio.SettingsBindFlags.DEFAULT);
 
         window._settings.bind('display-mode', displayModeRow, 'selected',
             Gio.SettingsBindFlags.DEFAULT);

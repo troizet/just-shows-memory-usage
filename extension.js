@@ -1,6 +1,7 @@
 import St from 'gi://St';
 import Clutter from 'gi://Clutter';
 import GLib from 'gi://GLib';
+import Gio from 'gi://Gio';
 import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
@@ -37,11 +38,31 @@ export default class JustShowsMemoryExtension extends Extension {
         this._label.set_text(text);
     }
 
+    _runClickCommand() {
+        try {
+            Gio.Subprocess.new(['/bin/sh', '-c', this._clickCommand], Gio.SubprocessFlags.NONE);
+        } catch (e) {
+            logError(e, `${this.name}: failed to run "${this._clickCommand}"`);
+        }
+    }
+
     enable() {
         this._indicator = new PanelMenu.Button(0.0, "Just memory usage", false);
         this._settings = this.getSettings();
         this._digits = this._settings.get_uint('digits');
         this._displayMode = this._settings.get_uint('display-mode');
+        this._clickCommand = this._settings.get_string('click-command').trim();
+
+        // Left click runs the configured command; right click still opens the menu.
+        this._clickHandler = this._indicator.connect('captured-event', (actor, event) => {
+            if (event.type() !== Clutter.EventType.BUTTON_PRESS ||
+                event.get_button() !== Clutter.BUTTON_PRIMARY ||
+                !this._clickCommand)
+                return Clutter.EVENT_PROPAGATE;
+
+            this._runClickCommand();
+            return Clutter.EVENT_STOP;
+        });
 
         this._timeout = GLib.timeout_add(GLib.PRIORITY_DEFAULT, this._settings.get_uint('timeout'), () => {
             this._refresh();
@@ -49,7 +70,7 @@ export default class JustShowsMemoryExtension extends Extension {
         });
         Main.panel.addToStatusArea("Just memory usage Indicator", this._indicator);
 
-        this._indicator.menu.addAction(_('Preferences'),
+        this._indicator.menu.addAction(this.gettext('Preferences'),
                 () => this.openPreferences());
 
         this._digitsHandler = this._settings.connect('changed::digits', (settings, key) => {
@@ -60,6 +81,10 @@ export default class JustShowsMemoryExtension extends Extension {
         this._displayModeHandler = this._settings.connect('changed::display-mode', (settings, key) => {
             this._displayMode = settings.get_uint(key);
             this._refresh();
+        });
+
+        this._clickCommandHandler = this._settings.connect('changed::click-command', (settings, key) => {
+            this._clickCommand = settings.get_string(key).trim();
         });
 
         this._timeoutHandler = this._settings.connect('changed::timeout', (settings, key) => {
@@ -85,6 +110,8 @@ export default class JustShowsMemoryExtension extends Extension {
 
     disable() {
         GLib.source_remove(this._timeout);
+        this._indicator.disconnect(this._clickHandler);
+        this._clickHandler = null;
         this._indicator.destroy();
         this._indicator = null;
         this._label.destroy();
@@ -98,6 +125,10 @@ export default class JustShowsMemoryExtension extends Extension {
         if (this._displayModeHandler) {
             this._settings.disconnect(this._displayModeHandler);
             this._displayModeHandler = null;
+        }
+        if (this._clickCommandHandler) {
+            this._settings.disconnect(this._clickCommandHandler);
+            this._clickCommandHandler = null;
         }
         if (this._timeoutHandler) {
             this._settings.disconnect(this._timeoutHandler);
