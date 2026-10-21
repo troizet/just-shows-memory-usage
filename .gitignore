@@ -2,3 +2,4 @@
 # Ignored files for GNOME extension git repository
 
 *.zip
+schemas/gschemas.compiled
