@@ -5,6 +5,9 @@ import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 
+const COLOR_REGEX = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
+const DEFAULT_LOW_MEMORY_COLOR = '#8b0000';
+
 export default class JustShowsMemoryExtension extends Extension {
     _refresh() {
         let info = this.read_proc_meminfo();
@@ -35,6 +38,18 @@ export default class JustShowsMemoryExtension extends Extension {
         }
 
         this._label.set_text(text);
+        this._updateBackground(100 - percentVal);
+    }
+
+    _updateBackground(freePercent) {
+        if (this._lowMemoryAlert && freePercent < this._lowMemoryThreshold) {
+            let color = COLOR_REGEX.test(this._lowMemoryColor) ? this._lowMemoryColor : DEFAULT_LOW_MEMORY_COLOR;
+            this._indicator.set_style(`background-color: ${color};`);
+            this._label.set_style(this._lowMemoryDarkText ? 'color: #000000;' : null);
+        } else {
+            this._indicator.set_style(null);
+            this._label.set_style(null);
+        }
     }
 
     enable() {
@@ -42,6 +57,10 @@ export default class JustShowsMemoryExtension extends Extension {
         this._settings = this.getSettings();
         this._digits = this._settings.get_uint('digits');
         this._displayMode = this._settings.get_uint('display-mode');
+        this._lowMemoryAlert = this._settings.get_boolean('low-memory-alert');
+        this._lowMemoryThreshold = this._settings.get_uint('low-memory-threshold');
+        this._lowMemoryColor = this._settings.get_string('low-memory-color').trim();
+        this._lowMemoryDarkText = this._settings.get_boolean('low-memory-dark-text');
 
         this._timeout = GLib.timeout_add(GLib.PRIORITY_DEFAULT, this._settings.get_uint('timeout'), () => {
             this._refresh();
@@ -59,6 +78,26 @@ export default class JustShowsMemoryExtension extends Extension {
 
         this._displayModeHandler = this._settings.connect('changed::display-mode', (settings, key) => {
             this._displayMode = settings.get_uint(key);
+            this._refresh();
+        });
+
+        this._lowMemoryAlertHandler = this._settings.connect('changed::low-memory-alert', (settings, key) => {
+            this._lowMemoryAlert = settings.get_boolean(key);
+            this._refresh();
+        });
+
+        this._lowMemoryThresholdHandler = this._settings.connect('changed::low-memory-threshold', (settings, key) => {
+            this._lowMemoryThreshold = settings.get_uint(key);
+            this._refresh();
+        });
+
+        this._lowMemoryColorHandler = this._settings.connect('changed::low-memory-color', (settings, key) => {
+            this._lowMemoryColor = settings.get_string(key).trim();
+            this._refresh();
+        });
+
+        this._lowMemoryDarkTextHandler = this._settings.connect('changed::low-memory-dark-text', (settings, key) => {
+            this._lowMemoryDarkText = settings.get_boolean(key);
             this._refresh();
         });
 
@@ -98,6 +137,22 @@ export default class JustShowsMemoryExtension extends Extension {
         if (this._displayModeHandler) {
             this._settings.disconnect(this._displayModeHandler);
             this._displayModeHandler = null;
+        }
+        if (this._lowMemoryAlertHandler) {
+            this._settings.disconnect(this._lowMemoryAlertHandler);
+            this._lowMemoryAlertHandler = null;
+        }
+        if (this._lowMemoryThresholdHandler) {
+            this._settings.disconnect(this._lowMemoryThresholdHandler);
+            this._lowMemoryThresholdHandler = null;
+        }
+        if (this._lowMemoryColorHandler) {
+            this._settings.disconnect(this._lowMemoryColorHandler);
+            this._lowMemoryColorHandler = null;
+        }
+        if (this._lowMemoryDarkTextHandler) {
+            this._settings.disconnect(this._lowMemoryDarkTextHandler);
+            this._lowMemoryDarkTextHandler = null;
         }
         if (this._timeoutHandler) {
             this._settings.disconnect(this._timeoutHandler);

@@ -1,8 +1,15 @@
+import Gdk from 'gi://Gdk';
 import Gio from 'gi://Gio';
+import GObject from 'gi://GObject';
 import Gtk from 'gi://Gtk';
 import Adw from 'gi://Adw';
 
 import {ExtensionPreferences, gettext as _} from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
+
+function rgbaToHex(rgba) {
+    const toHex = value => Math.round(value * 255).toString(16).padStart(2, '0');
+    return `#${toHex(rgba.red)}${toHex(rgba.green)}${toHex(rgba.blue)}`;
+}
 
 
 export default class JustShowsMemoryPreferences extends ExtensionPreferences {
@@ -58,7 +65,76 @@ export default class JustShowsMemoryPreferences extends ExtensionPreferences {
 
         group.add(timeoutSpin);
 
+        const lowMemoryGroup = new Adw.PreferencesGroup({
+            title: _('Low Memory Alert')
+        });
+        page.add(lowMemoryGroup);
+
+        const lowMemoryAlertRow = new Adw.SwitchRow({
+            title: _('Highlight on Low Memory'),
+            subtitle: _('Change the widget background when free memory is low.')
+        });
+
+        lowMemoryGroup.add(lowMemoryAlertRow);
+
+        const lowMemoryThresholdSpin = new Adw.SpinRow({
+            title: _('Threshold'),
+            subtitle: _('Highlight when free memory is below this value (in percent).')
+        });
+
+        lowMemoryThresholdSpin.set_adjustment(
+            new Gtk.Adjustment({
+                lower: 1,
+                upper: 99,
+                step_increment: 1
+            })
+        );
+
+        lowMemoryGroup.add(lowMemoryThresholdSpin);
+
+        const lowMemoryColorButton = new Gtk.ColorDialogButton({
+            dialog: new Gtk.ColorDialog({with_alpha: false}),
+            valign: Gtk.Align.CENTER
+        });
+
+        const lowMemoryColorRow = new Adw.ActionRow({
+            title: _('Background Color'),
+            subtitle: _('Widget background color when free memory is low.'),
+            activatable_widget: lowMemoryColorButton
+        });
+
+        lowMemoryColorRow.add_suffix(lowMemoryColorButton);
+        lowMemoryGroup.add(lowMemoryColorRow);
+
+        const lowMemoryDarkTextRow = new Adw.SwitchRow({
+            title: _('Dark Text'),
+            subtitle: _('Use black text instead of white (for light background colors).')
+        });
+
+        lowMemoryGroup.add(lowMemoryDarkTextRow);
+
         window._settings = this.getSettings();
+
+        const syncColorButton = () => {
+            const rgba = new Gdk.RGBA();
+            if (rgba.parse(window._settings.get_string('low-memory-color')) &&
+                !rgba.equal(lowMemoryColorButton.get_rgba()))
+                lowMemoryColorButton.set_rgba(rgba);
+        };
+
+        syncColorButton();
+
+        const colorChangedHandler = window._settings.connect('changed::low-memory-color', syncColorButton);
+        window.connect('close-request', () => {
+            window._settings.disconnect(colorChangedHandler);
+            return false;
+        });
+
+        lowMemoryColorButton.connect('notify::rgba', () => {
+            const hex = rgbaToHex(lowMemoryColorButton.get_rgba());
+            if (window._settings.get_string('low-memory-color') !== hex)
+                window._settings.set_string('low-memory-color', hex);
+        });
 
         window._settings.bind('display-mode', displayModeRow, 'selected',
             Gio.SettingsBindFlags.DEFAULT);
@@ -68,5 +144,23 @@ export default class JustShowsMemoryPreferences extends ExtensionPreferences {
 
         window._settings.bind('timeout', timeoutSpin, 'value',
             Gio.SettingsBindFlags.DEFAULT);
+
+        window._settings.bind('low-memory-alert', lowMemoryAlertRow, 'active',
+            Gio.SettingsBindFlags.DEFAULT);
+
+        window._settings.bind('low-memory-threshold', lowMemoryThresholdSpin, 'value',
+            Gio.SettingsBindFlags.DEFAULT);
+
+        lowMemoryAlertRow.bind_property('active', lowMemoryThresholdSpin, 'sensitive',
+            GObject.BindingFlags.SYNC_CREATE);
+
+        window._settings.bind('low-memory-dark-text', lowMemoryDarkTextRow, 'active',
+            Gio.SettingsBindFlags.DEFAULT);
+
+        lowMemoryAlertRow.bind_property('active', lowMemoryColorRow, 'sensitive',
+            GObject.BindingFlags.SYNC_CREATE);
+
+        lowMemoryAlertRow.bind_property('active', lowMemoryDarkTextRow, 'sensitive',
+            GObject.BindingFlags.SYNC_CREATE);
     }
 }
