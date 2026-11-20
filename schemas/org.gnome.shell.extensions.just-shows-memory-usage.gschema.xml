@@ -16,5 +16,26 @@
       <summary>Display Format</summary>
       <description>0: Used/Total, 1: Used/Total (%), 2: %, 3: Used (%)</description>
     </key>
+    <key name="low-memory-alert" type="b">
+      <default>false</default>
+      <summary>Low memory alert</summary>
+      <description>Change the widget background when free memory is below the threshold.</description>
+    </key>
+    <key name="low-memory-threshold" type="u">
+      <range min="1" max="99"/>
+      <default>10</default>
+      <summary>Low memory threshold</summary>
+      <description>Percentage of free memory below which the widget background is changed.</description>
+    </key>
+    <key name="low-memory-color" type="s">
+      <default>'#8b0000'</default>
+      <summary>Low memory background color</summary>
+      <description>Widget background color used when free memory is low.</description>
+    </key>
+    <key name="low-memory-dark-text" type="b">
+      <default>false</default>
+      <summary>Dark text on low memory</summary>
+      <description>Use black text instead of white when free memory is low (for light background colors).</description>
+    </key>
   </schema>
 </schemalist>
